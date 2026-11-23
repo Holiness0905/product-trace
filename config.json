@@ -1,0 +1,70 @@
+{
+  "base_url": "https://Holiness0905.github.io/product-trace/",
+  "id_label": "出厂编号",
+  "card": ["产品型号", "生产批次", "出厂编号", "生产日期"],
+  "date_fields": ["生产日期"],
+  "carry_markers": ["按原来的", "不变"],
+  "fallbacks": {
+    "换热器铜管": "金龙铜业 · 入厂复检合格",
+    "制冷剂": "R410A环保制冷剂",
+    "绝缘电阻": ">500MΩ",
+    "电气强度": "AC1800V/5s",
+    "制冷剂泄露": "≤2g/年"
+  },
+  "rewrites": [
+    ["(?<=\\S)(批次|型式试验)", " · \\1"]
+  ],
+  "change_format": "{head}：{new}",
+  "change_formats": {
+    "充注量": "R410A · 充注量{new}kg"
+  },
+  "result_default": "合格",
+  "sections": [
+    {
+      "title": "原材料追溯",
+      "icon": "📦",
+      "kind": "lines",
+      "fields": ["压缩机", "换热器铜管", "风机", "制冷剂"]
+    },
+    {
+      "title": "生产过程",
+      "icon": "⚙️",
+      "kind": "lines",
+      "fields": ["生产线别", "制冷剂充注", "过程检验"]
+    },
+    {
+      "title": "出厂检验报告",
+      "icon": "✅",
+      "kind": "tests",
+      "fields": [
+        {"label": "制冷量", "name": "制冷量", "unit": "kW"},
+        {"label": "制热量", "name": "制热量", "unit": "kW"},
+        {"label": "能效比", "name": "能效比"},
+        {"label": "绝缘电阻", "name": "绝缘电阻"},
+        {"label": "泄露电流", "name": "泄漏电流", "unit": "mA"},
+        {"label": "电气强度", "name": "电气强度"},
+        {"label": "制冷剂泄露", "name": "制冷剂泄漏"},
+        {"label": "噪音等级", "name": "噪声等级", "unit": "dB(A)"}
+      ]
+    }
+  ],
+  "site": {
+    "title": "奥利维尔空调设备",
+    "subtitle": "✓ 全生命周期质量追溯",
+    "logo": "❄️",
+    "company": "江苏奥利维尔环境设备有限公司",
+    "system": "全生命周期追溯管理系统 V2.0",
+    "validity_years": 15,
+    "notice": [
+      "本二维码为产品唯一身份标识",
+      "扫码可查看完整生产履历与质量检测记录"
+    ],
+    "certs": [
+      {"cert": "质量管理", "code": "ISO 9001:2015"},
+      {"cert": "环境管理", "code": "ISO 14001:2015"},
+      {"cert": "职业健康", "code": "ISO 45001:2018"}
+    ],
+    "warranty_label": "保修期限",
+    "warranty_name": "保修政策"
+  }
+}
