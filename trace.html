@@ -202,8 +202,15 @@
             return box;
         }
 
+        // site 为全局配置 (标题、证书、页脚等), 由 build.py 写入; 录入页导出的 products.json 可能不含 site, 此时使用默认值
+        var DEFAULT_SITE = {
+            title: '产品追溯', subtitle: '全生命周期质量追溯', logo: '',
+            company: '', system: '', validity_years: '', notice: [],
+            certs: [], warranty_name: '保修政策', generated_at: ''
+        };
+
         function render(data, product) {
-            var site = data.site;
+            var site = Object.assign({}, DEFAULT_SITE, data.site || {});
             page.innerHTML = '';
 
             var header = el('div', 'header');
