@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产品追溯信息</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; margin: 0; padding: 16px; color: #1f2937; }
+        .card { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+        h1 { font-size: 20px; margin: 0 0 4px; }
+        .sub { color: #6b7280; font-size: 14px; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        td { border-top: 1px solid #e5e7eb; padding: 8px 6px; vertical-align: top; }
+        td.label { width: 36%; color: #374151; font-weight: 600; white-space: pre-line; }
+        td.value { white-space: pre-line; word-break: break-all; }
+        .msg { color: #b91c1c; text-align: center; padding: 40px 0; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>产品追溯信息</h1>
+    <div class="sub" id="sub"></div>
+    <div id="content"></div>
+</div>
+<script>
+    (function () {
+        var content = document.getElementById('content');
+        var sub = document.getElementById('sub');
+        var id = new URLSearchParams(location.search).get('id');
+
+        function showMessage(text) {
+            content.innerHTML = '';
+            var div = document.createElement('div');
+            div.className = 'msg';
+            div.textContent = text;
+            content.appendChild(div);
+        }
+
+        if (!id) {
+            showMessage('未指定产品编号');
+            return;
+        }
+
+        fetch('data/products.json', { cache: 'no-cache' })
+            .then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function (data) {
+                var product = (data.products || []).find(function (p) { return p.id === id; });
+                if (!product) {
+                    showMessage('未找到该产品的追溯信息');
+                    return;
+                }
+                sub.textContent = '产品型号：' + product.model + '    出厂编号：' + product.id;
+
+                var table = document.createElement('table');
+                product.items.forEach(function (item) {
+                    if (!item.label && !item.value) return;
+                    var tr = document.createElement('tr');
+                    var th = document.createElement('td');
+                    th.className = 'label';
+                    th.textContent = item.label;
+                    var td = document.createElement('td');
+                    td.className = 'value';
+                    td.textContent = item.value;
+                    tr.appendChild(th);
+                    tr.appendChild(td);
+                    table.appendChild(tr);
+                });
+                content.innerHTML = '';
+                content.appendChild(table);
+            })
+            .catch(function () {
+                showMessage('追溯信息加载失败');
+            });
+    })();
+</script>
+</body>
+</html>
