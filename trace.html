@@ -2,40 +2,293 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>产品追溯信息</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>奥利维尔空调 - 产品追溯</title>
     <style>
-        body { font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; margin: 0; padding: 16px; color: #1f2937; }
-        .card { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-        h1 { font-size: 20px; margin: 0 0 4px; }
-        .sub { color: #6b7280; font-size: 14px; margin-bottom: 16px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        td { border-top: 1px solid #e5e7eb; padding: 8px 6px; vertical-align: top; }
-        td.label { width: 36%; color: #374151; font-weight: 600; white-space: pre-line; }
-        td.value { white-space: pre-line; word-break: break-all; }
-        .msg { color: #b91c1c; text-align: center; padding: 40px 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(180deg, #0052A5 0%, #003d7a 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+        .page { max-width: 100%; margin: 0 auto; background: #f5f5f5; min-height: 100vh; }
+        .header {
+            background: linear-gradient(135deg, #0052A5 0%, #003d7a 100%);
+            color: white;
+            padding: 32px 20px 24px;
+            text-align: center;
+        }
+        .logo { font-size: 48px; margin-bottom: 12px; }
+        .header h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+        .header .tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        .product-card {
+            background: white;
+            margin: -20px 16px 12px;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+        }
+        .product-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+        .product-row:last-child { border-bottom: none; }
+        .product-row .label { color: #999; }
+        .product-row .value { color: #333; font-weight: 600; }
+        .section {
+            background: white;
+            margin: 12px 16px;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .section-title {
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title .icon {
+            width: 28px;
+            height: 28px;
+            background: #0052A5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+        .info-list { padding: 8px 16px; }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid #f8f8f8;
+            font-size: 13px;
+        }
+        .info-item:last-child { border-bottom: none; }
+        .info-item .key { color: #666; flex-shrink: 0; width: 90px; }
+        .info-item .val { color: #333; text-align: right; flex: 1; line-height: 1.5; }
+        .test-list { padding: 8px 16px; }
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+        .test-item:last-child { border-bottom: none; }
+        .test-name { color: #333; }
+        .test-result {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .test-value { color: #059669; font-weight: 600; }
+        .pass-badge {
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .quality-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #f0f0f0;
+        }
+        .quality-item {
+            background: white;
+            padding: 16px;
+            text-align: center;
+        }
+        .quality-item .cert {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .quality-item .code {
+            font-size: 14px;
+            color: #0052A5;
+            font-weight: 600;
+        }
+        .footer {
+            background: #1f2937;
+            color: white;
+            padding: 20px 16px;
+            text-align: center;
+            margin-top: 12px;
+        }
+        .footer .company {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .footer .info {
+            font-size: 11px;
+            opacity: 0.7;
+            line-height: 1.8;
+        }
+        .notice {
+            background: #fef3c7;
+            margin: 12px 16px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #92400e;
+            text-align: center;
+            border-left: 4px solid #f59e0b;
+        }
+        .msg { color: #b91c1c; text-align: center; padding: 60px 16px; font-size: 15px; background: #fff; }
     </style>
 </head>
 <body>
-<div class="card">
-    <h1>产品追溯信息</h1>
-    <div class="sub" id="sub"></div>
-    <div id="content"></div>
-</div>
+<div class="page" id="page"></div>
 <script>
     (function () {
-        var content = document.getElementById('content');
-        var sub = document.getElementById('sub');
-        var id = new URLSearchParams(location.search).get('id');
+        var page = document.getElementById('page');
 
-        function showMessage(text) {
-            content.innerHTML = '';
-            var div = document.createElement('div');
-            div.className = 'msg';
-            div.textContent = text;
-            content.appendChild(div);
+        // 所有数据均通过 textContent 写入, 避免 HTML 注入
+        function el(tag, className, text) {
+            var node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text !== undefined && text !== null) node.textContent = text;
+            return node;
         }
 
+        // 多行文本用 <br> 分隔, 行内内容仍走 textContent
+        function appendLines(parent, lines) {
+            lines.forEach(function (line, i) {
+                if (i > 0) parent.appendChild(document.createElement('br'));
+                parent.appendChild(document.createTextNode(line));
+            });
+        }
+
+        function sectionTitle(icon, title) {
+            var t = el('div', 'section-title');
+            t.appendChild(el('div', 'icon', icon));
+            t.appendChild(document.createTextNode(title));
+            return t;
+        }
+
+        function showMessage(text) {
+            page.innerHTML = '';
+            page.appendChild(el('div', 'msg', text));
+        }
+
+        function render(data, product) {
+            page.innerHTML = '';
+
+            var header = el('div', 'header');
+            header.appendChild(el('div', 'logo', '❄️'));
+            header.appendChild(el('h1', null, '奥利维尔空调设备'));
+            header.appendChild(el('div', 'tag', '✓ 全生命周期质量追溯'));
+            page.appendChild(header);
+
+            var card = el('div', 'product-card');
+            [
+                ['产品型号', product.model],
+                ['生产批次', product.batch],
+                ['出厂编号', product.id],
+                ['生产日期', product.date]
+            ].forEach(function (row) {
+                var r = el('div', 'product-row');
+                r.appendChild(el('span', 'label', row[0]));
+                r.appendChild(el('span', 'value', row[1]));
+                card.appendChild(r);
+            });
+            page.appendChild(card);
+
+            function infoSection(icon, title, items) {
+                var sec = el('div', 'section');
+                sec.appendChild(sectionTitle(icon, title));
+                var list = el('div', 'info-list');
+                items.forEach(function (item) {
+                    var row = el('div', 'info-item');
+                    row.appendChild(el('span', 'key', item.name));
+                    var val = el('span', 'val');
+                    appendLines(val, item.lines);
+                    row.appendChild(val);
+                    list.appendChild(row);
+                });
+                sec.appendChild(list);
+                return sec;
+            }
+
+            page.appendChild(infoSection('📦', '原材料追溯', product.materials));
+            page.appendChild(infoSection('⚙️', '生产过程', product.process));
+
+            var testSec = el('div', 'section');
+            testSec.appendChild(sectionTitle('✅', '出厂检验报告'));
+            var testList = el('div', 'test-list');
+            product.tests.forEach(function (t) {
+                var row = el('div', 'test-item');
+                row.appendChild(el('span', 'test-name', t.name));
+                var res = el('div', 'test-result');
+                res.appendChild(el('span', 'test-value', t.value));
+                res.appendChild(el('span', 'pass-badge', t.result));
+                row.appendChild(res);
+                testList.appendChild(row);
+            });
+            testSec.appendChild(testList);
+            page.appendChild(testSec);
+
+            var certSec = el('div', 'section');
+            certSec.appendChild(sectionTitle('🏆', '质量认证'));
+            var grid = el('div', 'quality-grid');
+            data.certs.forEach(function (c) {
+                var item = el('div', 'quality-item');
+                item.appendChild(el('div', 'cert', c.cert));
+                item.appendChild(el('div', 'code', c.code));
+                grid.appendChild(item);
+            });
+            var warranty = el('div', 'quality-item');
+            warranty.appendChild(el('div', 'cert', '保修政策'));
+            warranty.appendChild(el('div', 'code', product.warranty));
+            grid.appendChild(warranty);
+            certSec.appendChild(grid);
+            page.appendChild(certSec);
+
+            var notice = el('div', 'notice');
+            notice.appendChild(document.createTextNode('本二维码为产品唯一身份标识'));
+            notice.appendChild(document.createElement('br'));
+            notice.appendChild(document.createTextNode('扫码可查看完整生产履历与质量检测记录'));
+            page.appendChild(notice);
+
+            var footer = el('div', 'footer');
+            footer.appendChild(el('div', 'company', data.company));
+            var info = el('div', 'info');
+            info.appendChild(document.createTextNode(data.system));
+            info.appendChild(document.createElement('br'));
+            info.appendChild(document.createTextNode('数据生成: ' + data.generatedAt));
+            info.appendChild(document.createElement('br'));
+            info.appendChild(document.createTextNode('追溯有效期: ' + data.validityYears + '年'));
+            footer.appendChild(info);
+            page.appendChild(footer);
+        }
+
+        var id = new URLSearchParams(location.search).get('id');
         if (!id) {
             showMessage('未指定产品编号');
             return;
@@ -52,24 +305,7 @@
                     showMessage('未找到该产品的追溯信息');
                     return;
                 }
-                sub.textContent = '产品型号：' + product.model + '    出厂编号：' + product.id;
-
-                var table = document.createElement('table');
-                product.items.forEach(function (item) {
-                    if (!item.label && !item.value) return;
-                    var tr = document.createElement('tr');
-                    var th = document.createElement('td');
-                    th.className = 'label';
-                    th.textContent = item.label;
-                    var td = document.createElement('td');
-                    td.className = 'value';
-                    td.textContent = item.value;
-                    tr.appendChild(th);
-                    tr.appendChild(td);
-                    table.appendChild(tr);
-                });
-                content.innerHTML = '';
-                content.appendChild(table);
+                render(data, product);
             })
             .catch(function () {
                 showMessage('追溯信息加载失败');
