@@ -1,5 +1,6 @@
 {
   "base_url": "https://Holiness0905.github.io/product-trace/",
+  "api_base": "https://trace-api.olywell.com",
   "id_label": "出厂编号",
   "card": ["产品型号", "生产批次", "出厂编号", "生产日期"],
   "date_fields": ["生产日期"],

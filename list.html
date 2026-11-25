@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备列表</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f5f7fa; margin: 0; padding: 16px; color: #1f2937; }
+        .wrap { max-width: 1000px; margin: 0 auto; }
+        h1 { font-size: 20px; margin: 8px 0 12px; }
+        nav { display: flex; gap: 12px; margin-bottom: 12px; font-size: 14px; }
+        nav a { color: #0052A5; text-decoration: none; padding: 6px 10px; border-radius: 6px; background: #fff; border: 1px solid #d1d5db; }
+        nav a.on { background: #0052A5; color: #fff; border-color: #0052A5; }
+        .panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; }
+        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+        label { display: flex; flex-direction: column; font-size: 13px; color: #374151; gap: 4px; }
+        input, textarea, select { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; background: #fff; }
+        th, td { border-bottom: 1px solid #e5e7eb; padding: 8px 6px; text-align: left; vertical-align: middle; }
+        th { background: #f9fafb; font-weight: 600; color: #374151; }
+        td.act { white-space: nowrap; }
+        button { font: inherit; font-size: 13px; border-radius: 6px; padding: 5px 10px; cursor: pointer; border: 1px solid #9ca3af; background: #fff; }
+        button.primary { background: #0052A5; color: #fff; border-color: #0052A5; }
+        button.danger { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+        button:disabled { opacity: .45; cursor: not-allowed; }
+        .msg { font-size: 13px; border-radius: 6px; padding: 8px 12px; margin: 10px 0; display: none; }
+        .msg.err { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; }
+        .msg.ok { color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; }
+        .msg.show { display: block; }
+        .hidden { display: none !important; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .box { background: #fff; border-radius: 8px; padding: 16px; width: 100%; max-width: 420px; }
+        .box h2 { font-size: 16px; margin: 0 0 10px; }
+        .box .col { display: flex; flex-direction: column; gap: 10px; }
+        .box .btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+        .muted { font-size: 12px; color: #6b7280; }
+        .cards { display: none; }
+        @media (max-width: 640px) {
+            table.tbl { display: none; }
+            .cards { display: block; }
+            .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; font-size: 14px; }
+            .card .r { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+            .card .r span:first-child { color: #6b7280; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>设备列表</h1>
+    <nav>
+        <a href="entry.html">录入设备</a>
+        <a href="list.html" class="on">设备列表</a>
+    </nav>
+
+    <div class="panel">
+        <div class="toolbar">
+            <label>关键字（出厂编号或型号）<input id="kw" placeholder="如 OLY 或 E15" style="width:220px"></label>
+            <button type="button" class="primary" id="btnSearch">查询</button>
+            <button type="button" id="btnReload">刷新</button>
+            <span class="muted" id="count"></span>
+        </div>
+        <div class="muted" style="margin-top:8px">列表无需登录即可查看。修改和删除需要管理员账号登录。</div>
+    </div>
+
+    <div id="login" class="panel toolbar">
+        <div class="muted" id="loginState" style="flex:1">未登录</div>
+        <label>账号<input id="lgUser" autocomplete="username" style="width:140px"></label>
+        <label>密码<input id="lgPass" type="password" autocomplete="current-password" style="width:140px"></label>
+        <button type="button" class="primary" id="btnLogin">登录</button>
+        <button type="button" id="btnLogout" class="hidden">退出登录</button>
+    </div>
+
+    <div id="msg" class="msg"></div>
+
+    <table class="tbl">
+        <thead><tr><th>出厂编号</th><th>产品型号</th><th>生产批次</th><th>生产日期</th><th>更新时间</th><th>操作</th></tr></thead>
+        <tbody id="rows"></tbody>
+    </table>
+    <div class="cards" id="cards"></div>
+</div>
+
+<!-- 编辑弹窗：仅管理员可用 -->
+<div id="modal" class="modal hidden">
+    <div class="box">
+        <h2>修改设备：<span id="editNo"></span></h2>
+        <div class="col">
+            <label>产品型号<input id="eModel"></label>
+            <label>生产批次<input id="eBatch"></label>
+            <label>生产日期<input id="eDate"></label>
+            <label>保修期限<input id="eWarranty"></label>
+            <div class="muted">原材料、工序、人员、检验项的详细内容请在数据库或后续版本中修改。本次仅修改基本信息。</div>
+        </div>
+        <div class="btns">
+            <button type="button" id="eCancel">取消</button>
+            <button type="button" class="primary" id="eSave">保存修改</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var API_BASE = 'https://trace-api.olywell.com';
+    var token = null;
+    var role = null;
+    var devices = [];
+    var editing = null;
+    var $ = function (id) { return document.getElementById(id); };
+
+    function setMsg(text, kind) {
+        var m = $('msg');
+        m.textContent = text;
+        m.className = 'msg show ' + (kind || 'err');
+    }
+
+    function api(path, opts) {
+        opts = opts || {};
+        var headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        return fetch(API_BASE + path, {
+            method: opts.method || 'GET',
+            headers: headers,
+            body: opts.body ? JSON.stringify(opts.body) : undefined
+        }).then(function (res) {
+            return res.text().then(function (t) {
+                var data = null;
+                try { data = t ? JSON.parse(t) : null; } catch (e) { data = t; }
+                if (!res.ok) {
+                    var detail = (data && data.detail) ? (Array.isArray(data.detail) ? data.detail.map(function (d) { return d.msg; }).join('；') : data.detail) : ('HTTP ' + res.status);
+                    throw new Error(detail);
+                }
+                return data;
+            });
+        });
+    }
+
+    function isAdmin() { return role === 'admin'; }
+
+    function updateLoginUI() {
+        var logged = !!token;
+        $('loginState').textContent = logged ? ('已登录：' + role) : '未登录。修改和删除需要管理员账号。';
+        $('btnLogin').classList.toggle('hidden', logged);
+        $('btnLogout').classList.toggle('hidden', !logged);
+        $('lgUser').classList.toggle('hidden', logged);
+        $('lgPass').classList.toggle('hidden', logged);
+        render();
+    }
+
+    function parseRole(jwt) {
+        try {
+            return JSON.parse(atob(jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).role;
+        } catch (e) { return null; }
+    }
+
+    function formatTime(s) {
+        if (!s) return '';
+        var d = new Date(s);
+        return isNaN(d) ? s : d.toLocaleString('zh-CN', { hour12: false });
+    }
+
+    function loadList() {
+        var kw = $('kw').value.trim();
+        var path = '/api/devices' + (kw ? '?keyword=' + encodeURIComponent(kw) : '');
+        // 列表接口需要登录；未登录时提示登录后查看
+        return api(path)
+            .then(function (d) {
+                devices = d || [];
+                $('count').textContent = '共 ' + devices.length + ' 条';
+                render();
+            })
+            .catch(function (e) {
+                devices = [];
+                render();
+                setMsg('列表加载失败：' + e.message + (token ? '' : '（请先登录）'));
+            });
+    }
+
+    function actionButtons(d) {
+        var html = '';
+        if (isAdmin()) {
+            html += '<button type="button" data-edit="' + d.factory_no + '">修改</button> ';
+            html += '<button type="button" class="danger" data-del="' + d.factory_no + '">删除</button> ';
+        }
+        html += '<a href="' + API_BASE + '/api/devices/' + encodeURIComponent(d.factory_no) + '/qr.png" target="_blank">二维码</a>';
+        return html;
+    }
+
+    function render() {
+        var tb = $('rows');
+        var cards = $('cards');
+        tb.innerHTML = '';
+        cards.innerHTML = '';
+        devices.forEach(function (d) {
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td></td><td></td><td></td><td></td><td></td><td class="act">' + actionButtons(d) + '</td>';
+            tr.children[0].textContent = d.factory_no;
+            tr.children[1].textContent = d.model;
+            tr.children[2].textContent = d.batch;
+            tr.children[3].textContent = d.production_date;
+            tr.children[4].textContent = formatTime(d.updated_at);
+            tb.appendChild(tr);
+
+            var card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML =
+                '<div class="r"><span>出厂编号</span><span></span></div>' +
+                '<div class="r"><span>产品型号</span><span></span></div>' +
+                '<div class="r"><span>生产批次</span><span></span></div>' +
+                '<div class="r"><span>生产日期</span><span></span></div>' +
+                '<div class="r"><span>操作</span><span class="act">' + actionButtons(d) + '</span></div>';
+            card.querySelectorAll('.r > span:last-child:not(.act)').forEach(function () {});
+            var vals = [d.factory_no, d.model, d.batch, d.production_date];
+            card.querySelectorAll('.r').forEach(function (r, i) {
+                if (i < 4) r.lastElementChild.textContent = vals[i];
+            });
+            cards.appendChild(card);
+        });
+        // 绑定操作按钮
+        document.querySelectorAll('[data-edit]').forEach(function (b) {
+            b.addEventListener('click', function () { openEdit(b.dataset.edit); });
+        });
+        document.querySelectorAll('[data-del]').forEach(function (b) {
+            b.addEventListener('click', function () { doDelete(b.dataset.del); });
+        });
+    }
+
+    function openEdit(no) {
+        var d = devices.find(function (x) { return x.factory_no === no; });
+        if (!d) return;
+        editing = no;
+        $('editNo').textContent = no;
+        $('eModel').value = d.model;
+        $('eBatch').value = d.batch;
+        $('eDate').value = d.production_date;
+        $('eWarranty').value = d.warranty || '';
+        $('modal').classList.remove('hidden');
+    }
+
+    function closeEdit() { $('modal').classList.add('hidden'); editing = null; }
+
+    $('eCancel').addEventListener('click', closeEdit);
+    $('eSave').addEventListener('click', function () {
+        if (!editing) return;
+        var body = {
+            model: $('eModel').value.trim(),
+            batch: $('eBatch').value.trim(),
+            production_date: $('eDate').value.trim(),
+            warranty: $('eWarranty').value.trim()
+        };
+        api('/api/devices/' + encodeURIComponent(editing), { method: 'PATCH', body: body })
+            .then(function () {
+                closeEdit();
+                setMsg('修改成功', 'ok');
+                return loadList();
+            })
+            .catch(function (e) { setMsg('修改失败：' + e.message); });
+    });
+
+    function doDelete(no) {
+        // 删除前二次确认
+        if (!window.confirm('确定删除设备 ' + no + ' 吗？此操作不可恢复。')) return;
+        api('/api/devices/' + encodeURIComponent(no), { method: 'DELETE' })
+            .then(function () {
+                setMsg('已删除：' + no, 'ok');
+                return loadList();
+            })
+            .catch(function (e) { setMsg('删除失败：' + e.message); });
+    }
+
+    $('btnLogin').addEventListener('click', function () {
+        var u = $('lgUser').value.trim();
+        var p = $('lgPass').value;
+        if (!u || !p) { setMsg('请输入账号和密码'); return; }
+        api('/api/auth/login', { method: 'POST', body: { username: u, password: p } })
+            .then(function (d) {
+                token = d.access_token;
+                role = parseRole(token);
+                $('lgPass').value = '';
+                updateLoginUI();
+                setMsg('登录成功', 'ok');
+                return loadList();
+            })
+            .catch(function (e) { setMsg('登录失败：' + e.message); });
+    });
+
+    $('btnLogout').addEventListener('click', function () {
+        token = null; role = null;
+        updateLoginUI();
+        setMsg('已退出登录', 'ok');
+    });
+
+    $('btnSearch').addEventListener('click', loadList);
+    $('btnReload').addEventListener('click', loadList);
+    $('kw').addEventListener('keydown', function (e) { if (e.key === 'Enter') loadList(); });
+
+    updateLoginUI();
+    loadList();
+})();
+</script>
+</body>
+</html>

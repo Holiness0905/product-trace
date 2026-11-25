@@ -275,18 +275,50 @@
             return;
         }
 
-        fetch('data/products.json', { cache: 'no-cache' })
-            .then(function (res) {
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                return res.json();
-            })
-            .then(function (data) {
-                var product = (data.products || []).find(function (p) { return p.id === id; });
-                if (!product) {
-                    showMessage('未找到该产品的追溯信息');
-                    return;
-                }
-                render(data, product);
+        // 后端返回扁平字段，这里转换为 render() 所需的 card / sections 结构
+        function toProduct(d) {
+            function lines(items, key) {
+                return (items || []).map(function (it) {
+                    return { name: it.name, lines: (it.content || '').split('\n').filter(Boolean) };
+                });
+            }
+            return {
+                id: d.factory_no,
+                card: [
+                    { label: '产品型号', value: d.model },
+                    { label: '生产批次', value: d.batch },
+                    { label: '出厂编号', value: d.factory_no },
+                    { label: '生产日期', value: d.production_date }
+                ],
+                sections: [
+                    { title: '原材料追溯', icon: '📦', kind: 'lines', items: lines(d.materials) },
+                    { title: '生产过程', icon: '⚙️', kind: 'lines', items: lines(d.process) },
+                    {
+                        title: '出厂检验报告', icon: '✅', kind: 'tests',
+                        items: (d.inspections || []).map(function (t) {
+                            return { name: t.name, value: t.value + (t.unit || ''), result: t.result || '合格' };
+                        })
+                    }
+                ],
+                warranty: d.warranty
+            };
+        }
+
+        // api_base 与 site 配置统一从 config.json 读取，只需改一处
+        fetch('config.json', { cache: 'no-cache' })
+            .then(function (r) { return r.json(); })
+            .then(function (cfg) {
+                return fetch(cfg.api_base + '/api/devices/' + encodeURIComponent(id), { cache: 'no-cache' })
+                    .then(function (res) {
+                        if (res.status === 404) {
+                            showMessage('未找到该产品的追溯信息');
+                            return;
+                        }
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        return res.json().then(function (d) {
+                            render({ site: cfg.site }, toProduct(d));
+                        });
+                    });
             })
             .catch(function () {
                 showMessage('追溯信息加载失败');

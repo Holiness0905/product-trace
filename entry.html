@@ -3,50 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>产品数据录入</title>
+    <title>设备录入</title>
     <style>
         * { box-sizing: border-box; }
         body { font-family: -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f5f7fa; margin: 0; padding: 16px; color: #1f2937; }
         .wrap { max-width: 900px; margin: 0 auto; }
-        h1 { font-size: 20px; margin: 8px 0 16px; }
+        h1 { font-size: 20px; margin: 8px 0 12px; }
+        nav { display: flex; gap: 12px; margin-bottom: 12px; font-size: 14px; }
+        nav a { color: #0052A5; text-decoration: none; padding: 6px 10px; border-radius: 6px; background: #fff; border: 1px solid #d1d5db; }
+        nav a.on { background: #0052A5; color: #fff; border-color: #0052A5; }
         fieldset { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; margin: 0 0 14px; }
         legend { font-weight: 600; padding: 0 6px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
         label { display: flex; flex-direction: column; font-size: 13px; color: #374151; gap: 4px; }
-        input, textarea, select { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+        input, textarea { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; }
         textarea { min-height: 56px; resize: vertical; }
         .row-list { display: flex; flex-direction: column; gap: 8px; }
         .row { display: grid; gap: 8px; align-items: center; }
+        .row.lines { grid-template-columns: 1fr 2fr 32px; }
         .row.roles { grid-template-columns: 1.2fr 1fr 1fr 32px; }
         .row.tests { grid-template-columns: 1.2fr 1fr 0.6fr 32px; }
-        .row.lines { grid-template-columns: 1fr 2fr 32px; }
-        .row.text { grid-template-columns: 1fr 2fr 32px; }
         .del { border: 0; background: #fee2e2; color: #b91c1c; border-radius: 6px; cursor: pointer; height: 32px; }
         .add { margin-top: 8px; border: 1px dashed #9ca3af; background: #fff; border-radius: 6px; padding: 6px 12px; cursor: pointer; color: #374151; }
         .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
         button.primary { background: #0052A5; color: #fff; border: 0; border-radius: 6px; padding: 10px 18px; font-size: 15px; cursor: pointer; }
         button.ghost { background: #fff; border: 1px solid #9ca3af; border-radius: 6px; padding: 10px 14px; font-size: 14px; cursor: pointer; }
-        .errors { color: #b91c1c; font-size: 13px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 8px 12px; display: none; }
-        .errors.show { display: block; }
-        .out { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-top: 12px; }
-        .out pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; max-height: 320px; overflow: auto; background: #f9fafb; padding: 8px; border-radius: 6px; }
+        button:disabled { opacity: .5; cursor: not-allowed; }
+        .msg { font-size: 13px; border-radius: 6px; padding: 8px 12px; margin: 10px 0; display: none; }
+        .msg.err { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; }
+        .msg.ok { color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; }
+        .msg.show { display: block; }
         .hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
+        .login { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+        .login .state { font-size: 13px; color: #374151; flex: 1; }
+        .qr { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-top: 12px; display: flex; gap: 14px; align-items: center; }
+        .qr img { width: 160px; height: 160px; border: 1px solid #e5e7eb; }
+        .qr .info { flex: 1; font-size: 13px; color: #374151; word-break: break-all; }
     </style>
 </head>
 <body>
 <div class="wrap">
-    <h1>产品数据录入</h1>
+    <h1>设备录入</h1>
+    <nav>
+        <a href="entry.html" class="on">录入设备</a>
+        <a href="list.html">设备列表</a>
+    </nav>
 
-    <div id="errors" class="errors"></div>
+    <div class="login">
+        <div class="state" id="loginState">未登录。录入需要账号（管理员或录入员）。</div>
+        <label>账号<input id="lgUser" autocomplete="username" style="width:140px"></label>
+        <label>密码<input id="lgPass" type="password" autocomplete="current-password" style="width:140px"></label>
+        <button type="button" class="primary" id="btnLogin">登录</button>
+        <button type="button" class="ghost hidden" id="btnLogout">退出登录</button>
+    </div>
+
+    <div id="msg" class="msg"></div>
 
     <fieldset>
         <legend>产品基本信息</legend>
         <div class="grid">
             <label>产品型号 *<input id="model" placeholder="如 E15"></label>
-            <label>出厂编号 *<input id="id" placeholder="如 OLY-2026050078"></label>
+            <label>出厂编号 *<input id="factoryNo" placeholder="如 OLY-2026050078"></label>
             <label>生产批次 *<input id="batch" placeholder="如 2026-05-001"></label>
-            <label>生产日期 *<input id="date" type="date"></label>
+            <label>生产日期 *<input id="date" placeholder="如 2026年5月7日"></label>
             <label>保修期限<input id="warranty" value="整机保修2年"></label>
         </div>
     </fieldset>
@@ -55,444 +75,236 @@
         <legend>原材料追溯</legend>
         <div id="materials" class="row-list"></div>
         <button type="button" class="add" data-add="materials">+ 添加原材料</button>
-        <div class="hint">名称可选填标准项：压缩机、换热器铜管、风机、制冷剂、或自定义名称。批次、合格证号等写在「内容」中，每行一条，换行即分行。</div>
+        <div class="hint">名称可选填：压缩机、换热器铜管、风机、制冷剂，或自定义。内容每行一条。</div>
     </fieldset>
 
     <fieldset>
-        <legend>生产过程（工序及人员）</legend>
+        <legend>生产过程</legend>
         <div id="process" class="row-list"></div>
         <button type="button" class="add" data-add="process">+ 添加工序</button>
-        <div class="hint">工序名称如「装配」「焊接」「充注」「检验」。内容为该工序的说明或数据，每行一条。</div>
+        <div class="hint">工序如「装配」「焊接」「充注」「检验」，内容每行一条。</div>
     </fieldset>
 
     <fieldset>
         <legend>工序人员</legend>
-        <div id="roles" class="row-list"></div>
-        <button type="button" class="add" data-add="roles">+ 添加人员</button>
-        <div class="hint">每行一位人员：工序、姓名、角色（如 班组长、操作员、检验员）。同一工序可添加多人。</div>
+        <div id="personnel" class="row-list"></div>
+        <button type="button" class="add" data-add="personnel">+ 添加人员</button>
+        <div class="hint">每行一位：工序、姓名、角色（如班组长、操作员、检验员）。</div>
     </fieldset>
 
     <fieldset>
         <legend>出厂检验报告</legend>
-        <div id="tests" class="row-list"></div>
-        <button type="button" class="add" data-add="tests">+ 添加检验项</button>
-        <div class="hint">结果默认「合格」，不合格请改写。单位可留空，数值会自动附加单位（如 kW）。</div>
+        <div id="inspections" class="row-list"></div>
+        <button type="button" class="add" data-add="inspections">+ 添加检验项</button>
+        <div class="hint">结果默认「合格」。单位可留空，数值会附加单位（如 kW）。</div>
     </fieldset>
 
     <div class="actions">
-        <button type="button" class="primary" id="btnAdd">加入产品列表</button>
-        <button type="button" class="ghost" id="btnFill">填入示例</button>
+        <button type="button" class="primary" id="btnSave">保存设备</button>
         <button type="button" class="ghost" id="btnClear">清空表单</button>
     </div>
 
-    <fieldset>
-        <legend>已录入产品（<span id="count">0</span>）</legend>
-        <div id="list"></div>
-        <div class="actions">
-            <button type="button" class="primary" id="btnExport">导出 products.json</button>
-            <button type="button" class="ghost" id="btnImport">导入 products.json</button>
-            <input type="file" id="fileImport" accept="application/json,.json" class="hidden">
+    <div id="qrArea" class="qr hidden">
+        <img id="qrImg" alt="追溯二维码">
+        <div class="info">
+            <div id="qrTitle"></div>
+            <div id="qrUrl" style="margin:6px 0"></div>
+            <button type="button" class="primary" id="btnQrDownload">下载二维码 PNG</button>
         </div>
-        <div class="hint">导出的文件放到 data/products.json 后，运行 tools/build.py 中的二维码步骤即可（或直接使用本页生成的二维码）。</div>
-    </fieldset>
-
-    <div id="qrArea" class="out hidden"></div>
+    </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
-    (function () {
-        var BASE_URL = 'https://Holiness0905.github.io/product-trace/';
-        var MODEL_LABEL = '产品型号';
-        var products = [];
-        var editingIndex = -1;
+(function () {
+    // 后端地址：与本页同域部署时为空字符串；本机调试时可改为 https://trace-api.olywell.com
+    var API_BASE = 'https://trace-api.olywell.com';
+    var TOKEN_KEY = null; // 令牌仅保存在内存中，刷新页面需重新登录
 
-        var $ = function (id) { return document.getElementById(id); };
+    var token = null;
+    var role = null;
+    var $ = function (id) { return document.getElementById(id); };
 
-        // 行模板: kind 决定可见字段
-        var ROW_TEMPLATES = {
-            materials: function () {
-                return rowEl('row lines', [
-                    input('name', '名称，如 压缩机'),
-                    textarea('content', '内容，每行一条，如：谷轮 · 批次C0P20260418'),
-                ]);
-            },
-            process: function () {
-                return rowEl('row lines', [
-                    input('name', '工序，如 装配'),
-                    textarea('content', '内容，每行一条'),
-                ]);
-            },
-            roles: function () {
-                return rowEl('row roles', [
-                    input('process', '工序，如 装配'),
-                    input('person', '姓名，如 田建国'),
-                    input('role', '角色，如 班组长'),
-                ]);
-            },
-            tests: function () {
-                return rowEl('row tests', [
-                    input('name', '检验项，如 制冷量'),
-                    input('value', '数值，如 14.7'),
-                    input('unit', '单位，如 kW'),
-                ]);
-            }
+    function setMsg(text, kind) {
+        var m = $('msg');
+        m.textContent = text;
+        m.className = 'msg show ' + (kind || 'err');
+    }
+
+    function api(path, opts) {
+        opts = opts || {};
+        var headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        return fetch(API_BASE + path, {
+            method: opts.method || 'GET',
+            headers: headers,
+            body: opts.body ? JSON.stringify(opts.body) : undefined
+        }).then(function (res) {
+            return res.text().then(function (t) {
+                var data = null;
+                try { data = t ? JSON.parse(t) : null; } catch (e) { data = t; }
+                if (!res.ok) {
+                    var detail = (data && data.detail) ? (Array.isArray(data.detail) ? data.detail.map(function (d) { return d.msg; }).join('；') : data.detail) : ('HTTP ' + res.status);
+                    throw new Error(detail);
+                }
+                return data;
+            });
+        });
+    }
+
+    function updateLoginState() {
+        var logged = !!token;
+        $('loginState').textContent = logged ? ('已登录：' + role + '（令牌仅保存在本页内存中）') : '未登录。录入需要账号（管理员或录入员）。';
+        $('btnLogin').classList.toggle('hidden', logged);
+        $('btnLogout').classList.toggle('hidden', !logged);
+        $('lgUser').classList.toggle('hidden', logged);
+        $('lgPass').classList.toggle('hidden', logged);
+        $('btnSave').disabled = !logged || role === 'viewer';
+    }
+
+    $('btnLogin').addEventListener('click', function () {
+        var u = $('lgUser').value.trim();
+        var p = $('lgPass').value;
+        if (!u || !p) { setMsg('请输入账号和密码'); return; }
+        api('/api/auth/login', { method: 'POST', body: { username: u, password: p } })
+            .then(function (d) {
+                token = d.access_token;
+                $('lgPass').value = '';
+                // 角色从令牌载荷读取，仅用于前端提示，权限以后端校验为准
+                try { role = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).role; } catch (e) { role = '已登录'; }
+                updateLoginState();
+                setMsg('登录成功', 'ok');
+            })
+            .catch(function (e) { setMsg('登录失败：' + e.message); });
+    });
+
+    $('btnLogout').addEventListener('click', function () {
+        token = null; role = null; updateLoginState();
+        setMsg('已退出登录', 'ok');
+    });
+
+    function rowEl(cls, children) {
+        var row = document.createElement('div');
+        row.className = 'row ' + cls;
+        children.forEach(function (c) { row.appendChild(c); });
+        var del = document.createElement('button');
+        del.type = 'button'; del.className = 'del'; del.textContent = '×';
+        del.addEventListener('click', function () { row.remove(); });
+        row.appendChild(del);
+        return row;
+    }
+    function field(name, placeholder, tag) {
+        var el = document.createElement(tag || 'input');
+        el.dataset.field = name;
+        el.placeholder = placeholder;
+        return el;
+    }
+
+    var ROWS = {
+        materials: function (v) { return rowEl('lines', [field('name', '名称，如 压缩机'), field('content', '内容，每行一条', 'textarea')]); },
+        process: function (v) { return rowEl('lines', [field('name', '工序，如 装配'), field('content', '内容，每行一条', 'textarea')]); },
+        personnel: function (v) { return rowEl('roles', [field('process', '工序，如 装配'), field('person', '姓名'), field('role', '角色，如 班组长')]); },
+        inspections: function (v) { return rowEl('tests', [field('name', '检验项，如 制冷量'), field('value', '数值，如 14.7'), field('unit', '单位')]); }
+    };
+
+    function addRow(kind, values) {
+        var row = ROWS[kind]();
+        if (values) {
+            Array.prototype.forEach.call(row.querySelectorAll('[data-field]'), function (f) {
+                f.value = values[f.dataset.field] || '';
+            });
+        }
+        $(kind).appendChild(row);
+    }
+
+    function readRows(kind) {
+        return Array.prototype.map.call($(kind).children, function (row) {
+            var o = {};
+            Array.prototype.forEach.call(row.querySelectorAll('[data-field]'), function (f) { o[f.dataset.field] = f.value.trim(); });
+            return o;
+        });
+    }
+
+    function clearRows() {
+        ['materials', 'process', 'personnel', 'inspections'].forEach(function (k) { $(k).innerHTML = ''; });
+    }
+
+    function collect() {
+        var materials = readRows('materials').filter(function (r) { return r.name; }).map(function (r) {
+            return { name: r.name, content: r.content.replace(/\r/g, '') };
+        });
+        var process = readRows('process').filter(function (r) { return r.name; }).map(function (r) {
+            return { name: r.name, content: r.content.replace(/\r/g, '') };
+        });
+        var personnel = readRows('personnel').filter(function (r) { return r.process || r.person; });
+        var inspections = readRows('inspections').filter(function (r) { return r.name; }).map(function (r) {
+            return { name: r.name, value: r.value, unit: r.unit || '', result: '合格' };
+        });
+        return {
+            factory_no: $('factoryNo').value.trim(),
+            model: $('model').value.trim(),
+            batch: $('batch').value.trim(),
+            production_date: $('date').value.trim(),
+            warranty: $('warranty').value.trim() || '整机保修2年',
+            materials: materials,
+            process: process,
+            personnel: personnel,
+            inspections: inspections
         };
+    }
 
-        function input(field, placeholder) {
-            var i = document.createElement('input');
-            i.dataset.field = field;
-            i.placeholder = placeholder;
-            return i;
-        }
+    function validate(d) {
+        var miss = [];
+        if (!d.model) miss.push('产品型号');
+        if (!d.factory_no) miss.push('出厂编号');
+        if (!d.batch) miss.push('生产批次');
+        if (!d.production_date) miss.push('生产日期');
+        return miss.length ? ('请填写：' + miss.join('、')) : '';
+    }
 
-        function textarea(field, placeholder) {
-            var t = document.createElement('textarea');
-            t.dataset.field = field;
-            t.placeholder = placeholder;
-            return t;
-        }
-
-        function rowEl(cls, children) {
-            var row = document.createElement('div');
-            row.className = cls;
-            children.forEach(function (c) { row.appendChild(c); });
-            var del = document.createElement('button');
-            del.type = 'button';
-            del.className = 'del';
-            del.textContent = '×';
-            del.title = '删除此行';
-            del.addEventListener('click', function () { row.remove(); });
-            row.appendChild(del);
-            return row;
-        }
-
-        function addRow(kind, values) {
-            var row = ROW_TEMPLATES[kind]();
-            if (values) {
-                Object.keys(values).forEach(function (k) {
-                    var f = row.querySelector('[data-field="' + k + '"]');
-                    if (f) f.value = values[k];
-                });
-            }
-            $(kind).appendChild(row);
-            return row;
-        }
-
-        function readRows(kind) {
-            var out = [];
-            Array.prototype.forEach.call($(kind).children, function (row) {
-                var obj = {};
-                Array.prototype.forEach.call(row.querySelectorAll('[data-field]'), function (f) {
-                    obj[f.dataset.field] = f.value.trim();
-                });
-                out.push(obj);
+    function showQr(factoryNo) {
+        var img = $('qrImg');
+        var url = API_BASE + '/api/devices/' + encodeURIComponent(factoryNo) + '/qr.png';
+        img.src = url;
+        $('qrTitle').textContent = '出厂编号：' + factoryNo;
+        $('qrUrl').textContent = '追溯地址由二维码内容决定，下载后扫码即可打开追溯页。';
+        $('qrArea').classList.remove('hidden');
+        $('btnQrDownload').onclick = function () {
+            fetch(url).then(function (r) { return r.blob(); }).then(function (blob) {
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = factoryNo.replace(/[\\\/:*?"<>|]/g, '_') + '.png';
+                a.click();
+                setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
             });
-            return out;
-        }
+        };
+    }
 
-        function clearRows(kind) {
-            $(kind).innerHTML = '';
-        }
+    $('btnSave').addEventListener('click', function () {
+        var d = collect();
+        var err = validate(d);
+        if (err) { setMsg(err); return; }
+        api('/api/devices', { method: 'POST', body: d })
+            .then(function () {
+                setMsg('保存成功：' + d.factory_no, 'ok');
+                showQr(d.factory_no);
+            })
+            .catch(function (e) { setMsg('保存失败：' + e.message); });
+    });
 
-        function showErrors(list) {
-            var box = $('errors');
-            if (!list.length) {
-                box.classList.remove('show');
-                box.textContent = '';
-                return;
-            }
-            box.textContent = list.join('；');
-            box.classList.add('show');
-        }
+    $('btnClear').addEventListener('click', function () {
+        ['model', 'factoryNo', 'batch', 'date'].forEach(function (k) { $(k).value = ''; });
+        $('warranty').value = '整机保修2年';
+        clearRows();
+        $('qrArea').classList.add('hidden');
+    });
 
-        // 把表单转换为 products.json 的产品对象 (与 tools/build.py 输出结构一致)
-        function collect() {
-            var errors = [];
-            var model = $('model').value.trim();
-            var id = $('id').value.trim();
-            var batch = $('batch').value.trim();
-            var date = $('date').value;
-            if (!model) errors.push('产品型号不能为空');
-            if (!id) errors.push('出厂编号不能为空');
-            if (!batch) errors.push('生产批次不能为空');
-            if (!date) errors.push('生产日期不能为空');
+    Array.prototype.forEach.call(document.querySelectorAll('[data-add]'), function (btn) {
+        btn.addEventListener('click', function () { addRow(btn.dataset.add); });
+    });
 
-            var materials = readRows('materials').filter(function (r) { return r.name; });
-            var process = readRows('process').filter(function (r) { return r.name; });
-            var roles = readRows('roles').filter(function (r) { return r.process || r.person; });
-            var tests = readRows('tests').filter(function (r) { return r.name; });
-
-            roles.forEach(function (r, i) {
-                if (!r.process) errors.push('第 ' + (i + 1) + ' 条人员缺少工序');
-                if (!r.person) errors.push('第 ' + (i + 1) + ' 条人员缺少姓名');
-            });
-            tests.forEach(function (r) {
-                if (!r.value) errors.push('检验项「' + r.name + '」缺少数值');
-            });
-
-            if (errors.length) return { errors: errors };
-
-            var card = [
-                { label: '产品型号', value: model },
-                { label: '生产批次', value: batch },
-                { label: '出厂编号', value: id },
-                { label: '生产日期', value: formatDate(date) }
-            ];
-
-            var sections = [];
-
-            if (materials.length) {
-                sections.push({
-                    title: '原材料追溯', icon: '📦', kind: 'lines',
-                    items: materials.map(function (m) {
-                        return { name: m.name, lines: splitLines(m.content) };
-                    })
-                });
-            }
-
-            if (process.length) {
-                sections.push({
-                    title: '生产过程', icon: '⚙️', kind: 'lines',
-                    items: process.map(function (p) {
-                        return { name: p.name, lines: splitLines(p.content) };
-                    })
-                });
-            }
-
-            if (roles.length) {
-                sections.push({
-                    title: '工序人员', icon: '👥', kind: 'lines',
-                    items: roles.map(function (r) {
-                        var label = r.role ? r.person + '（' + r.role + '）' : r.person;
-                        return { name: r.process, lines: [label] };
-                    })
-                });
-            }
-
-            if (tests.length) {
-                sections.push({
-                    title: '出厂检验报告', icon: '✅', kind: 'tests',
-                    items: tests.map(function (t) {
-                        var value = t.value + (t.unit ? t.unit : '');
-                        return { name: t.name, value: value, result: '合格' };
-                    })
-                });
-            }
-
-            return {
-                product: {
-                    id: id,
-                    card: card,
-                    sections: sections,
-                    warranty: $('warranty').value.trim() || '整机保修2年'
-                }
-            };
-        }
-
-        function splitLines(text) {
-            return (text || '').split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
-        }
-
-        function formatDate(iso) {
-            var parts = iso.split('-');
-            return parseInt(parts[0], 10) + '年' + parseInt(parts[1], 10) + '月' + parseInt(parts[2], 10) + '日';
-        }
-
-        function renderList() {
-            var list = $('list');
-            list.innerHTML = '';
-            $('count').textContent = products.length;
-            products.forEach(function (p, i) {
-                var row = document.createElement('div');
-                row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:14px;';
-                var name = document.createElement('span');
-                name.textContent = p.id + '  ' + (p.card[0] ? p.card[0].value : '');
-                var btns = document.createElement('span');
-                var edit = document.createElement('button');
-                edit.type = 'button'; edit.className = 'ghost'; edit.textContent = '编辑';
-                edit.addEventListener('click', function () { loadProduct(i); });
-                var del = document.createElement('button');
-                del.type = 'button'; del.className = 'del'; del.textContent = '删除';
-                del.addEventListener('click', function () {
-                    if (confirm('删除产品 ' + p.id + ' ?')) {
-                        products.splice(i, 1);
-                        renderList();
-                    }
-                });
-                btns.appendChild(edit);
-                btns.appendChild(del);
-                row.appendChild(name);
-                row.appendChild(btns);
-                list.appendChild(row);
-            });
-        }
-
-        function clearForm() {
-            ['model', 'id', 'batch', 'date'].forEach(function (k) { $(k).value = ''; });
-            $('warranty').value = '整机保修2年';
-            ['materials', 'process', 'roles', 'tests'].forEach(clearRows);
-            editingIndex = -1;
-            $('btnAdd').textContent = '加入产品列表';
-            showErrors([]);
-        }
-
-        // 从 products.json 结构反填表单 (仅用于编辑已录入的产品)
-        function loadProduct(index) {
-            var p = products[index];
-            clearForm();
-            var card = {};
-            p.card.forEach(function (c) { card[c.label] = c.value; });
-            $('model').value = card['产品型号'] || '';
-            $('id').value = p.id;
-            $('batch').value = card['生产批次'] || '';
-            $('warranty').value = p.warranty || '';
-            p.sections.forEach(function (sec) {
-                if (sec.kind === 'tests') {
-                    sec.items.forEach(function (t) {
-                        addRow('tests', { name: t.name, value: t.value, unit: '' });
-                    });
-                } else if (sec.title === '原材料追溯') {
-                    sec.items.forEach(function (it) {
-                        addRow('materials', { name: it.name, content: it.lines.join('\n') });
-                    });
-                } else if (sec.title === '生产过程') {
-                    sec.items.forEach(function (it) {
-                        addRow('process', { name: it.name, content: it.lines.join('\n') });
-                    });
-                } else if (sec.title === '工序人员') {
-                    sec.items.forEach(function (it) {
-                        var m = it.lines[0].match(/^(.+?)（(.+)）$/);
-                        addRow('roles', {
-                            process: it.name,
-                            person: m ? m[1] : it.lines[0],
-                            role: m ? m[2] : ''
-                        });
-                    });
-                }
-            });
-            editingIndex = index;
-            $('btnAdd').textContent = '保存修改';
-            window.scrollTo(0, 0);
-        }
-
-        function addProduct() {
-            var result = collect();
-            if (result.errors) {
-                showErrors(result.errors);
-                return;
-            }
-            var dup = products.some(function (p, i) {
-                return p.id === result.product.id && i !== editingIndex;
-            });
-            if (dup) {
-                showErrors(['出厂编号 ' + result.product.id + ' 已存在']);
-                return;
-            }
-            if (editingIndex >= 0) {
-                products[editingIndex] = result.product;
-            } else {
-                products.push(result.product);
-            }
-            renderList();
-            clearForm();
-            renderQR(result.product);
-        }
-
-        function renderQR(product) {
-            var area = $('qrArea');
-            area.classList.remove('hidden');
-            area.innerHTML = '';
-            var title = document.createElement('div');
-            title.style.cssText = 'font-size:14px;margin-bottom:8px;';
-            var url = BASE_URL + 'trace.html?id=' + encodeURIComponent(product.id);
-            title.textContent = '二维码：' + product.id + '  ' + url;
-            area.appendChild(title);
-            var holder = document.createElement('div');
-            area.appendChild(holder);
-            if (typeof QRCode === 'undefined') {
-                var warn = document.createElement('div');
-                warn.className = 'hint';
-                warn.textContent = '二维码库未加载（需要联网访问 CDN），仍可导出 products.json。';
-                area.appendChild(warn);
-                return;
-            }
-            new QRCode(holder, {
-                text: url, width: 200, height: 200,
-                colorDark: '#000000', colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
-            });
-        }
-
-        function fillSample() {
-            clearForm();
-            $('model').value = 'E15';
-            $('id').value = 'OLY-2026050078';
-            $('batch').value = '2026-05-001';
-            $('date').value = '2026-05-07';
-            addRow('materials', { name: '压缩机', content: '谷轮 · 批次C0P20260418\n合格证号：GQ-2026-0417' });
-            addRow('materials', { name: '换热器铜管', content: '金龙铜业 · 入厂复检合格' });
-            addRow('materials', { name: '风机', content: '亿利达 · 批次YLD20260423\n功率180W · 型式试验通过' });
-            addRow('materials', { name: '制冷剂', content: 'R410A环保制冷剂' });
-            addRow('process', { name: '生产线别', content: '班组长：田建国' });
-            addRow('process', { name: '制冷剂充注', content: 'R410A · 充注量3.47kg' });
-            addRow('roles', { process: '装配', person: '田建国', role: '班组长' });
-            addRow('roles', { process: '制冷剂充注', person: '许祥勇', role: '操作员' });
-            addRow('roles', { process: '过程检验', person: '许祥勇', role: '检验员' });
-            addRow('tests', { name: '制冷量', value: '14.7', unit: 'kW' });
-            addRow('tests', { name: '制热量', value: '14.9', unit: 'kW' });
-            addRow('tests', { name: '能效比', value: '3.62', unit: '' });
-            addRow('tests', { name: '噪声等级', value: '55', unit: 'dB(A)' });
-        }
-
-        // 导出时只保留 products, site 等全局配置由 config.json 生成, 不在此覆盖
-        function exportJSON() {
-            var data = {
-                products: products
-            };
-            var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
-            var a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'products.json';
-            a.click();
-            URL.revokeObjectURL(a.href);
-        }
-
-        function importJSON(file) {
-            var reader = new FileReader();
-            reader.onload = function () {
-                try {
-                    var data = JSON.parse(reader.result);
-                    var list = Array.isArray(data) ? data : (data.products || []);
-                    // 仅接受 build.py 输出的产品结构, 不接受 site 等配置
-                    if (!Array.isArray(list)) throw new Error('格式不正确');
-                    products = list;
-                    renderList();
-                    showErrors([]);
-                } catch (e) {
-                    showErrors(['导入失败：' + e.message]);
-                }
-            };
-            reader.readAsText(file, 'utf-8');
-        }
-
-        // 事件绑定
-        Array.prototype.forEach.call(document.querySelectorAll('[data-add]'), function (btn) {
-            btn.addEventListener('click', function () { addRow(btn.dataset.add); });
-        });
-        $('btnAdd').addEventListener('click', addProduct);
-        $('btnFill').addEventListener('click', fillSample);
-        $('btnClear').addEventListener('click', clearForm);
-        $('btnExport').addEventListener('click', exportJSON);
-        $('btnImport').addEventListener('click', function () { $('fileImport').click(); });
-        $('fileImport').addEventListener('change', function (e) {
-            if (e.target.files[0]) importJSON(e.target.files[0]);
-        });
-
-        // 初始给每个分区一行空白
-        ['materials', 'process', 'roles', 'tests'].forEach(function (k) { addRow(k); });
-        renderList();
-    })();
+    ['materials', 'process', 'personnel', 'inspections'].forEach(function (k) { addRow(k); });
+    updateLoginState();
+})();
 </script>
 </body>
 </html>
